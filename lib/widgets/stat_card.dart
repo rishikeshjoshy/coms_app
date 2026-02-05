@@ -29,12 +29,12 @@ class StatCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon , color: color , size:28),
+          Icon(icon , color: color , size:24),
           Text(
             title,
             style: TextStyle(
@@ -43,12 +43,12 @@ class StatCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 16,),
+          const SizedBox(height: 10,),
           Text(
             value,
             style: TextStyle(
               color: Colors.black87,
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           )
