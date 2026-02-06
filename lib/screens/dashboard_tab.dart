@@ -66,11 +66,18 @@ class _DashboardTabState extends State<DashboardTab> {
                     builder: (context , snapshot){
                       if (snapshot.connectionState ==  ConnectionState.waiting) {
                         return Center(
-                          child: Text("Error: ${snapshot.error}",
-                          style: TextStyle(color: Colors.red),)
+                          child: Text("Please Wait! Data is getting loaded.",
+                          style: TextStyle(color: Colors.green),)
                         );
                       } else if (!snapshot.hasData){
-                        return const Center(child: Text("No data available"));
+                        return const Center(
+                            child: Text(
+                              "No data available",
+                        style: TextStyle(
+                            color: Colors.red
+                        ),
+                            )
+                        );
                       }
 
                       final data = snapshot.data!['data']; // This will access the Data key from backend json

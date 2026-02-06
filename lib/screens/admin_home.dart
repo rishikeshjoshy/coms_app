@@ -1,4 +1,6 @@
 import 'package:coms_app/screens/dashboard_tab.dart';
+import 'package:coms_app/screens/orders_tab.dart';
+import 'package:coms_app/widgets/order_tile.dart';
 import 'package:flutter/material.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -16,7 +18,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>{
   /// The  3 Main TABS
   static const List<Widget> _pages = <Widget>[
     DashboardTab(),
-    Center(child: Text('Order Management System (Coming Soon)')),
+    OrdersTab(),
     Center(child: Text('Content Management System (Coming Soon)')),
   ];
 

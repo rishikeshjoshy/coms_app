@@ -41,16 +41,25 @@ class ApiService {
 
   // 3. FETCH ALL ORDERS ( OMS )
   Future<List<Order>> fetchOrder() async {
-    final response = await http.get(Uri.parse('$baseUrl/orders/admin'));
+    print("------ STARTED FETCH ORDERS ------");
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/orders/admin'));
+      if (response.statusCode == 200) {
+        print("RAW API RESPONSE: ${response.body}");
 
-    if (response.statusCode == 200) {
-      final Map<String , dynamic> body = json.decode(response.body);
-      final List<dynamic> data = body['data'];
-      return data.map((json) => Order.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load orders');
+        /// DEBUG LINE
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> data = body['data'];
+        return data.map((json) => Order.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load orders');
+      }
+    } catch(e) {
+      print("----- CRITICAL CRASH FETCH: $e");
+      throw Exception('Error fetching orders: $e');
     }
   }
+
 
   // 4. UPDATE ORDERS STATUS
   Future<bool> updateORderStatus(int orderId, String status) async {
