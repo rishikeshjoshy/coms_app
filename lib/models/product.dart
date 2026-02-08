@@ -1,11 +1,10 @@
-class Product
-{
+class Product {
   final int id;
   final String title;
   final String description;
   final double basePrice;
   final String category;
-  final String? imageUrl;
+  final String? imageUrl; // We will fill this from the variant
   final int stock;
 
   Product({
@@ -16,36 +15,43 @@ class Product
     required this.category,
     this.imageUrl,
     required this.stock,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    // 1. Dig for the Image
+    String? foundImage;
+    int totalStock = 0;
+
+    // Check if 'product_variants' exists and is a list
+    if (json['product_variants'] != null) {
+      var variants = json['product_variants'] as List;
+
+      if (variants.isNotEmpty) {
+        // Take the first variant as the "Main" display
+        var firstVar = variants[0];
+
+        // Get Stock
+        totalStock = firstVar['stock_quantity'] ?? 0;
+
+        // Get Image: Check if 'images' array exists inside the variant
+        if (firstVar['images'] != null) {
+          var imgs = firstVar['images'] as List;
+          if (imgs.isNotEmpty) {
+            foundImage = imgs[0]; // Grab the first URL
+          }
+        }
+      }
     }
-  );
-
-// Factory constructore to create a product from JSON
-factory Product.fromJson(Map<String , dynamic> json) {
-  // Handle the nested variants array to get image and stock
-  String? img;
-  int qty = 0;
-
-  // Checks if the product variants array exists and has variants of sarees
-  if (json['product_variants'] != null &&
-      (json['product_variants'] as List).isNotEmpty) {
-    final variant = json['product_variants'][0];
-
-    // Checks if the image array exists and is not empty
-    if (variant['images'] != null && (variant['images'] as List).isNotEmpty) {
-      img = variant['images'][0];
-    }
-    qty = variant['stock_quantity'] ?? 0;
-  }
 
     return Product(
       id: json['id'],
-      title: json['title'],
+      title: json['title'] ?? 'Unknown Saree',
       description: json['description'] ?? '',
-      // Safely parse price (Backend might send string or number)
-      basePrice: double.parse(json['base_price'].toString()),
+      // Safe Double Parsing (handles '12500' string or 12500 int)
+      basePrice: double.tryParse(json['base_price'].toString()) ?? 0.0,
       category: json['category'] ?? 'General',
-      imageUrl: img,
-      stock: qty,
+      imageUrl: foundImage, // <--- The Found URL
+      stock: totalStock,
     );
   }
 }

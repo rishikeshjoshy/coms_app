@@ -25,7 +25,7 @@ dependencies:
   google_fonts: ^6.1.0
 
   #Device Features
-  image_picker: ^1.0.7
+  image_picker: ^1.2.1
 
   #State Management
   provider: ^6.1.1

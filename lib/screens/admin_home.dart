@@ -1,4 +1,5 @@
 import 'package:coms_app/screens/dashboard_tab.dart';
+import 'package:coms_app/screens/inventory_tab.dart';
 import 'package:coms_app/screens/orders_tab.dart';
 import 'package:coms_app/widgets/order_tile.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>{
   static const List<Widget> _pages = <Widget>[
     DashboardTab(),
     OrdersTab(),
-    Center(child: Text('Content Management System (Coming Soon)')),
+    InventoryTab(),
   ];
 
   void _onItemTapped(int index) {

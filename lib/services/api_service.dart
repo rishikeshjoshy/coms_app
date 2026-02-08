@@ -26,16 +26,37 @@ class ApiService {
     }
   }
 
+
   // 2. FETCH ALL PRODUCTS ( CMS )
   Future<List<Product>> fetchProducts() async {
-    final response = await http.get(Uri.parse('$baseUrl/products'));
+    print("----- STARTED FETCH PRODUCTS -----");
+    try {
+      // FIX 1: Removed arguments from function (it should be empty brackets)
+      // FIX 2: Fixed variable name typo (response, not responsse)
+      final response = await http.get(Uri.parse('$baseUrl/products'));
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> body = json.decode(response.body);
-      final List<dynamic> data = body['data'];
-      return data.map((json) => Product.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load products');
+      if (response.statusCode == 200) {
+        /// RAW DEBUG LINE - Shows us exactly what the server sent
+        print("RAW API RESPONSE: ${response.body}");
+
+        final Map<String, dynamic> body = json.decode(response.body);
+
+        // Safety Check: If 'data' is missing, return empty list instead of crashing
+        if (body['data'] == null) {
+          print("CRITICAL: 'data' key is missing!");
+          return [];
+        }
+
+        final List<dynamic> data = body['data'];
+        return data.map((json) => Product.fromJson(json)).toList();
+      } else {
+        print("Server Error: ${response.statusCode}");
+        throw Exception('Failed to load the products');
+      }
+    } catch (e) {
+      print("----- CRITICAL FETCH ERROR: $e");
+      // FIX 3: Must return an empty list on error so the app doesn't crash
+      return [];
     }
   }
 
@@ -71,7 +92,7 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // 5. UPLOAD NEW PRODUCT
+  // 5. UPLOAD NEW PRODUCT (Multipart Request - Multi Image Support)
   Future<bool> createProduct({
     required String title,
     required String description,
@@ -80,30 +101,38 @@ class ApiService {
     required String colorName,
     required String colorHex,
     required String stock,
-    required File imageFile,
-}) async {
+    required List<File> images, // <--- CHANGED: Accepts a List now
+  }) async {
     var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/products'));
 
-    // TEXT FIELDS __ FAAAHHH !!!
+    // Text Fields
     request.fields['title'] = title;
-    request.fields['price'] = price;
     request.fields['description'] = description;
+    request.fields['base_price'] = price;
     request.fields['category'] = category;
-    request.fields['colorName'] = colorName;
-    request.fields['colorHex'] = colorHex;
+    request.fields['color_name'] = colorName;
+    request.fields['color_hex'] = colorHex;
     request.fields['stock'] = stock;
 
-    // FILE FIELDS ___ RAAAAAAH !!!
-    request.files.add(
-        await http.MultipartFile.fromPath(
-            'image',
-            imageFile.path
-        )
-    );
+    // File Fields (Loop through all images)
+    for (var file in images) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'images',
+        // <--- IMPORTANT: Ensure your Backend Multer expects 'images' (plural)
+        file.path,
+      ));
+    }
 
     var response = await request.send();
-    return response.statusCode == 201;
 
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    } else {
+      print("Upload Failed: ${response.statusCode}");
+      // Optional: Read response stream to see backend error
+      final respStr = await response.stream.bytesToString();
+      print("Server Error: $respStr");
+      return false;
+    }
   }
-
-}
+  }
