@@ -29,12 +29,12 @@ class StatCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(15.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon , color: color , size:24),
+          Icon(icon , color: color , size:20),
           Text(
             title,
             style: TextStyle(
@@ -48,7 +48,7 @@ class StatCard extends StatelessWidget {
             value,
             style: TextStyle(
               color: Colors.black87,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           )

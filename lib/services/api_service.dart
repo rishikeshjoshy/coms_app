@@ -17,13 +17,20 @@ class ApiService {
 
   // 1. FETCH DASHBOARD STATS
   Future<Map<String, dynamic>> fetchhStats() async {
-    final response = await http.get(Uri.parse('$baseUrl/orders/stats'));
+    print("----- STARTED FETCH STATS -----");
+    try{
+      final response = await http.get(Uri.parse('$baseUrl/orders/stats'));
 
-    if( response.statusCode == 200 ){
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load stats');
+      if( response.statusCode == 200 ){
+        print("RAW DEBUG LINES : ${response.body}");
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load stats');
+      }
+    } catch(e) {
+      throw("Critical fetch error !!");
     }
+
   }
 
 
