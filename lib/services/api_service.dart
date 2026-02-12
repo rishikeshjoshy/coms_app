@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../models/order.dart';
 import '../models/product.dart';
@@ -100,46 +102,84 @@ class ApiService {
   }
 
   // 5. UPLOAD NEW PRODUCT (Multipart Request - Multi Image Support)
+  // ---------------------------------------------------------------------------
+  // 4. UPLOAD PRODUCT (Multi-Part Request)
+  // ---------------------------------------------------------------------------
   Future<bool> createProduct({
     required String title,
     required String description,
     required String price,
     required String category,
-    required String colorName,
-    required String colorHex,
+    required String colorName, // NEW
+    required String colorHex,  // NEW
     required String stock,
-    required List<File> images, // <--- CHANGED: Accepts a List now
+    required List<File> images,
   }) async {
-    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/products'));
+    try {
+      print("----- STARTED UPLOAD NEW PRODUCT -----");
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/products'));
 
-    // Text Fields
-    request.fields['title'] = title;
-    request.fields['description'] = description;
-    request.fields['base_price'] = price;
-    request.fields['category'] = category;
-    request.fields['color_name'] = colorName;
-    request.fields['color_hex'] = colorHex;
-    request.fields['stock'] = stock;
+      // 1. Add Text Fields
+      request.fields['title'] = title;
+      request.fields['description'] = description;
+      request.fields['base_price'] = price;
+      request.fields['category'] = category;
+      request.fields['color_name'] = colorName;
+      request.fields['color_hex'] = colorHex;
+      request.fields['stock'] = stock;
 
-    // File Fields (Loop through all images)
-    for (var file in images) {
-      request.files.add(await http.MultipartFile.fromPath(
-        'images',
-        // <--- IMPORTANT: Ensure your Backend Multer expects 'images' (plural)
-        file.path,
-      ));
-    }
+      // 2. Add Images (Loop)
+      // CRITICAL: The key must be 'image' (Singular) to match Node.js Multer
+      for (var file in images) {
+        // lookupMimeType requires 'package:mime/mime.dart'
+        // It reads the file extension (e.g., .jpg) and returns 'image/jpeg'
+        final mimeType = lookupMimeType(file.path) ?? 'image/jpg';
+        final mimeSplit = mimeType.split('/');
 
-    var response = await request.send();
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'image', // Key matching backend
+            file.path,
+            contentType: MediaType(mimeSplit[0], mimeSplit[1]), // <--- THE FIX
+          ),
+        );
+      }
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    } else {
-      print("Upload Failed: ${response.statusCode}");
-      // Optional: Read response stream to see backend error
-      final respStr = await response.stream.bytesToString();
-      print("Server Error: $respStr");
+      // 3. Send & Check
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Upload Success: ${response.body}");
+        return true;
+      } else {
+        print("Upload Failed: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Error uploading product: $e");
       return false;
     }
   }
+  // ---------------------------------------------------------------------------
+// 5. GET ALL PRODUCTS
+// ---------------------------------------------------------------------------
+  Future<List<Product>> fetchhProducts() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/products'));
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final List<dynamic> data = jsonResponse['data'] ?? [];
+        return data.map((json) => Product.fromJson(json)).toList();
+      } else {
+        print("Failed to load products: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("Error fetching products: $e");
+      return [];
+    }
   }
+  }
+

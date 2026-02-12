@@ -1,57 +1,62 @@
+import 'package:flutter/foundation.dart'; // For debugPrint
+
 class Product {
   final int id;
   final String title;
   final String description;
   final double basePrice;
-  final String category;
-  final String? imageUrl; // We will fill this from the variant
   final int stock;
+  final String category;
+  final String? imageUrl;
 
   Product({
     required this.id,
     required this.title,
     required this.description,
     required this.basePrice,
+    required this.stock,
     required this.category,
     this.imageUrl,
-    required this.stock,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    // 1. Dig for the Image
-    String? foundImage;
-    int totalStock = 0;
+    // 1. SAFE PRICE PARSING
+    double price = 0.0;
+    if (json['base_price'] != null) {
+      price = double.tryParse(json['base_price'].toString()) ?? 0.0;
+    }
 
-    // Check if 'product_variants' exists and is a list
-    if (json['product_variants'] != null) {
-      var variants = json['product_variants'] as List;
+    // 2. STRICT IMAGE EXTRACTION
+    // We look for 'product_variants'. If it's missing, this product has NO image.
+    String? img;
+    int stok = 0;
 
-      if (variants.isNotEmpty) {
-        // Take the first variant as the "Main" display
-        var firstVar = variants[0];
+    if (json['product_variants'] != null && (json['product_variants'] as List).isNotEmpty) {
+      final firstVariant = json['product_variants'][0];
 
-        // Get Stock
-        totalStock = firstVar['stock_quantity'] ?? 0;
+      // Stock
+      stok = firstVariant['stock_quantity'] ?? 0;
 
-        // Get Image: Check if 'images' array exists inside the variant
-        if (firstVar['images'] != null) {
-          var imgs = firstVar['images'] as List;
-          if (imgs.isNotEmpty) {
-            foundImage = imgs[0]; // Grab the first URL
-          }
-        }
+      // Image: We only take the image if it exists INSIDE this specific variant
+      if (firstVariant['images'] != null && (firstVariant['images'] as List).isNotEmpty) {
+        img = firstVariant['images'][0];
       }
+    }
+
+    // 3. DEBUG LOG (Check your "Run" tab to see this!)
+    // This proves the ID matches the Image.
+    if (kDebugMode) {
+      print("Parsed Product ID: ${json['id']} -> Image: $img");
     }
 
     return Product(
       id: json['id'],
-      title: json['title'] ?? 'Unknown Saree',
+      title: json['title'] ?? 'Unknown Item',
       description: json['description'] ?? '',
-      // Safe Double Parsing (handles '12500' string or 12500 int)
-      basePrice: double.tryParse(json['base_price'].toString()) ?? 0.0,
+      basePrice: price,
+      stock: stok,
       category: json['category'] ?? 'General',
-      imageUrl: foundImage, // <--- The Found URL
-      stock: totalStock,
+      imageUrl: img,
     );
   }
 }

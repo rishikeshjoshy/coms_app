@@ -25,13 +25,16 @@ dependencies:
   google_fonts: ^6.1.0
 
   #Device Features
-  image_picker: ^1.2.1
+  image_picker: ^1.0.4
 
   #State Management
   provider: ^6.1.1
 
   #Flutter Toast Message
   fluttertoast: ^8.2.4
+
+  #Adding mime
+  mime: ^1.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
