@@ -70,14 +70,65 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Edit ID: #${widget.product.id}")),
+      appBar: AppBar(
+        title: Text("Edit ID: #${widget.product.id}"),
+        actions: [
+          // --- THE DELETE BUTTON ---
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            onPressed: () {
+              // --- CONFIRMATION DIALOG ---
+              showDialog(
+                context: context,
+                builder: (BuildContext dialogContext) {
+                  return AlertDialog(
+                    title: const Text("Delete Saree?"),
+                    content: const Text("Are you sure you want to permanently remove this item from the website and inventory?"),
+                    actions: [
+                      TextButton(
+                        child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                        onPressed: () => Navigator.pop(dialogContext), // Close dialog
+                      ),
+                      TextButton(
+                        child: const Text("Delete", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                        onPressed: () async {
+                          Navigator.pop(dialogContext); // Close dialog first
+
+                          setState(() => _isSaving = true);
+
+                          // Call the API service
+                          final success = await _apiService.deleteProduct(widget.product.id);
+
+                          if (!mounted) return;
+
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Item Deleted 🗑️"), backgroundColor: Colors.red),
+                            );
+                            // Pop the Edit screen entirely and tell Inventory to refresh
+                            Navigator.pop(context, true);
+                          } else {
+                            setState(() => _isSaving = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Failed to delete item")),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          )
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              // Display current image as uneditable reference
               // --- MULTI-IMAGE CAROUSEL ---
               if (widget.product.imageUrls.isNotEmpty)
                 SizedBox(

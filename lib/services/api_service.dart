@@ -212,5 +212,25 @@ class ApiService {
       return false;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // 7. DELETE PRODUCT
+  // ---------------------------------------------------------------------------
+  Future<bool> deleteProduct(int id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/products/$id'));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        print("Failed to delete: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Error deleting product: $e");
+      return false;
+    }
+  }
+
   }
 
