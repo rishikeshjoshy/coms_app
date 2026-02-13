@@ -181,5 +181,36 @@ class ApiService {
       return [];
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // 6. UPDATE PRODUCT (Text & Stock Only)
+  // ---------------------------------------------------------------------------
+  Future<bool> updateProductDetails({
+    required int id,
+    required String title,
+    required String description,
+    required String price,
+    required String category,
+    required String stock,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/products/$id'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "title": title,
+          "description": description,
+          "base_price": price,
+          "category": category,
+          "stock": stock,
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating product: $e");
+      return false;
+    }
+  }
   }
 

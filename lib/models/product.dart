@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart'; // For debugPrint
+import 'package:flutter/foundation.dart';
 
 class Product {
   final int id;
@@ -7,7 +7,10 @@ class Product {
   final double basePrice;
   final int stock;
   final String category;
-  final String? imageUrl;
+  final List<String> imageUrls; // Stores all uploaded images
+
+  // SHORTCUT: Safely extracts exactly ONE image as a String for the Grid
+  String? get mainImage => imageUrls.isNotEmpty ? imageUrls.first : null;
 
   Product({
     required this.id,
@@ -16,37 +19,32 @@ class Product {
     required this.basePrice,
     required this.stock,
     required this.category,
-    this.imageUrl,
+    required this.imageUrls,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    // 1. SAFE PRICE PARSING
+    // Safely parse price
     double price = 0.0;
     if (json['base_price'] != null) {
       price = double.tryParse(json['base_price'].toString()) ?? 0.0;
     }
 
-    // 2. STRICT IMAGE EXTRACTION
-    // We look for 'product_variants'. If it's missing, this product has NO image.
-    String? img;
+    List<String> images = [];
     int stok = 0;
 
+    // Dig into variants
     if (json['product_variants'] != null && (json['product_variants'] as List).isNotEmpty) {
       final firstVariant = json['product_variants'][0];
-
-      // Stock
       stok = firstVariant['stock_quantity'] ?? 0;
 
-      // Image: We only take the image if it exists INSIDE this specific variant
-      if (firstVariant['images'] != null && (firstVariant['images'] as List).isNotEmpty) {
-        img = firstVariant['images'][0];
+      // STRICT PARSING: Forces the JSON array into a clean Dart List of Strings
+      if (firstVariant['images'] != null && firstVariant['images'] is List) {
+        images = (firstVariant['images'] as List).map((item) => item.toString()).toList();
       }
     }
 
-    // 3. DEBUG LOG (Check your "Run" tab to see this!)
-    // This proves the ID matches the Image.
     if (kDebugMode) {
-      print("Parsed Product ID: ${json['id']} -> Image: $img");
+      print("Parsed Product ID: ${json['id']} -> Images Count: ${images.length}");
     }
 
     return Product(
@@ -56,7 +54,7 @@ class Product {
       basePrice: price,
       stock: stok,
       category: json['category'] ?? 'General',
-      imageUrl: img,
+      imageUrls: images,
     );
   }
 }

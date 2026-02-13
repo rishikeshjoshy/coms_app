@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/product.dart';
 import 'add_product_screen.dart';
+import 'edit_product_screen.dart';
 
 class InventoryTab extends StatefulWidget {
   const InventoryTab({super.key});
@@ -48,7 +49,8 @@ class _InventoryTabState extends State<InventoryTab> {
         },
         label: const Text("Add Saree"),
         icon: const Icon(Icons.add_a_photo),
-        backgroundColor: Colors.black, // Sleek look
+        backgroundColor: Colors.black,
+        // Sleek look
         foregroundColor: Colors.white,
       ),
       body: RefreshIndicator(
@@ -66,7 +68,8 @@ class _InventoryTabState extends State<InventoryTab> {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: Text("Error: ${snapshot.error}", textAlign: TextAlign.center),
+                  child: Text(
+                      "Error: ${snapshot.error}", textAlign: TextAlign.center),
                 ),
               );
             }
@@ -78,7 +81,8 @@ class _InventoryTabState extends State<InventoryTab> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey[400]),
+                    Icon(Icons.inventory_2_outlined, size: 60,
+                        color: Colors.grey[400]),
                     const SizedBox(height: 10),
                     Text("No products found.\nTap '+ Add Saree' to start!",
                       textAlign: TextAlign.center,
@@ -118,98 +122,104 @@ class _InventoryTabState extends State<InventoryTab> {
       elevation: 3,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias, // Ensures image doesn't bleed out
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      clipBehavior: Clip.antiAlias,
+      child: Stack( // Wrap everything in a Stack to position the Edit Button
         children: [
-          // 1. IMAGE SECTION (Expanded to fill top)
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. IMAGE SECTION
+              Expanded(
+                child: Container(
                   width: double.infinity,
                   color: Colors.grey[100],
-                  child: product.imageUrl != null
+                  // Use 'mainImage', which hands us a clean, single String URL
+                  child: product.mainImage != null
                       ? Image.network(
-                    product.imageUrl!,
-                    fit: BoxFit.cover,
-                    // Loading Builder: Shows spinner while image downloads
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(
-                          child: SizedBox(
-                              width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2)
-                          )
-                      );
-                    },
-                    // Error Builder: Shows broken icon if URL fails
-                    errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image, color: Colors.grey),
+                    product.mainImage!, // <-- The ! says "trust me, it's a string"
+                    fit: BoxFit.fitHeight,
+                    errorBuilder: (c, e, s) => const Icon(Icons.broken_image, color: Colors.grey),
                   )
                       : const Icon(Icons.image, size: 40, color: Colors.grey),
                 ),
-                // Stock Badge (Top Right)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: product.stock < 5 ? Colors.red : Colors.black54,
-                      borderRadius: BorderRadius.circular(8),
+              ),
+
+              // 2. DETAILS SECTION
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // --- NEW: PRODUCT ID ---
+                    Text(
+                      "ID: #${product.id}",
+                      style: TextStyle(fontSize: 10,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.bold),
                     ),
-                    child: Text(
-                      product.stock < 5 ? "Low Stock" : "${product.stock} Qty",
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 2),
+
+                    Text(
+                      product.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      format.format(product.basePrice),
+                      style: const TextStyle(color: Color(0xFF800020),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Stock: ${product.stock}",
+                          style: TextStyle(fontSize: 12,
+                              color: product.stock < 5 ? Colors.red : Colors
+                                  .grey[800],
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              )
+            ],
           ),
 
-          // 2. DETAILS SECTION
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
+          // --- NEW: EDIT BUTTON OVERLAY ---
+          Positioned(
+            top: 5,
+            right: 5,
+            child: Material(
+              color: Colors.white.withOpacity(0.9),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () async {
+                  // Navigate to Edit Screen
+                  final didUpdate = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) =>
+                        EditProductScreen(product: product)),
+                  );
+                  // Refresh grid if changes were saved
+                  if (didUpdate == true) {
+                    _loadProducts();
+                  }
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(6.0),
+                  child: Icon(Icons.edit, size: 18, color: Colors.black),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  format.format(product.basePrice),
-                  style: const TextStyle(
-                    color: Color(0xFF800020), // Burgundy
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // Category/Type Chip (Optional Visual)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    product.category.toUpperCase(),
-                    style: TextStyle(fontSize: 10, color: Colors.grey[800]),
-                  ),
-                ),
-              ],
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
