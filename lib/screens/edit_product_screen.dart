@@ -3,7 +3,7 @@ import '../models/product.dart';
 import '../services/api_service.dart';
 
 class EditProductScreen extends StatefulWidget {
-  final Product product; // We pass the existing product here
+  final Product product;
 
   const EditProductScreen({super.key, required this.product});
 
@@ -22,7 +22,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   bool _isSaving = false;
   late String _selectedCategory;
-  final List<String> _categories = ['Saree', 'Lehenga', 'Suit', 'Kurti', 'General'];
+  final List<String> _categories = ['Silk', 'Banarasi', 'Kanjivaram', 'Party', 'Office'];
 
   @override
   void initState() {
@@ -161,7 +161,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               const SizedBox(height: 12),
 
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: "Category", border: OutlineInputBorder()),
                 items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                 onChanged: (val) => setState(() => _selectedCategory = val!),

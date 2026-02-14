@@ -26,10 +26,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
   // State
   List<XFile> _selectedImages = [];
   bool _isUploading = false;
-  String _selectedCategory = 'Saree'; // Default Value
+  String _selectedCategory = 'Silk'; // Default Value
 
   // Categories List
-  final List<String> _categories = ['Saree', 'Lehenga', 'Suit', 'Kurti', 'General'];
+  final List<String> _categories = ['Silk', 'Banarasi', 'Kanjivaram', 'Party', 'Office'];
 
   // 1. PICK IMAGES
   Future<void> _pickImages() async {
