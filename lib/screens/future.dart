@@ -6,6 +6,7 @@
 //
 /// Why it's great: If you ever hire a manager or lose your phone, your business data and product listings remain completely locked down.
 //
+
 /// 2. Push Notifications (The Operations Engine)
 /// The Concept: Instead of opening the app and pulling to refresh, your phone should buzz the second a customer checks out on the website.
 //
@@ -13,6 +14,7 @@
 //
 /// Why it's great: Instant fulfillment. You know immediately when a saree is sold, allowing you to package it faster and impress the customer.
 //
+
 /// 3. PDF Invoice & Label Generation (The Time Saver)
 /// The Concept: A "Generate Invoice" button inside the Order Details screen.
 //
@@ -20,6 +22,7 @@
 //
 /// Why it's great: Eliminates the need to manually write down shipping addresses on courier packages.
 //
+
 /// 4. Customer CRM Tab (The Growth Lever)
 /// The Concept: A 4th tab on your Bottom Navigation Bar dedicated entirely to "Customers."
 //
