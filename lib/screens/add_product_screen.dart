@@ -33,7 +33,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   // 1. PICK IMAGES
   Future<void> _pickImages() async {
-    final List<XFile> pickedFiles = await _picker.pickMultiImage();
+    final List<XFile> pickedFiles = await _picker.pickMultiImage( imageQuality: 30 );
     if (pickedFiles.isNotEmpty) {
       if (_selectedImages.length + pickedFiles.length > 5) {
         ScaffoldMessenger.of(context).showSnackBar(
