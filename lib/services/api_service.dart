@@ -232,5 +232,58 @@ class ApiService {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // 8. FETCH ORDER STATS
+  // ---------------------------------------------------------------------------
+  Future<Map<String, dynamic>?> fetchOrderStats() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/orders/admin/stats'));
+      if (response.statusCode == 200) {
+        return json.decode(response.body)['stats'];
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching stats: $e");
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 9. FETCH ALL ORDERS
+  // ---------------------------------------------------------------------------
+  Future<List<dynamic>> fetchAllOrders() async {
+    print("----- STARTED FETCH ALL ORDERS -----");
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/orders/admin'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body)['data'] ?? [];
+        // CRITICAL: This line converts the raw Maps into strict Order objects
+        return data.map((json) => Order.fromJson(json)).toList();
+      }
+      print("----- ENDED FETCH ALL ORDERS -----");
+      return [];
+    } catch (e) {
+      print("Error fetching orders: $e");
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 10. UPDATE ORDER STATUS
+  // ---------------------------------------------------------------------------
+  Future<bool> updateOrderStatus(int orderId, String newStatus) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/orders/$orderId/status'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"status": newStatus}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating status: $e");
+      return false;
+    }
+  }
+
   }
 

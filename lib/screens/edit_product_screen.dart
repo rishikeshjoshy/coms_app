@@ -27,16 +27,16 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill the controllers with current data
     _titleController = TextEditingController(text: widget.product.title);
     _descController = TextEditingController(text: widget.product.description);
     _priceController = TextEditingController(text: widget.product.basePrice.toString());
     _stockController = TextEditingController(text: widget.product.stock.toString());
 
-    // Ensure category matches list, otherwise default to 'Saree'
+    // --- THE BULLETPROOF FALLBACK ---
+    // If the database category doesn't exist in your new list, safely grab the first item.
     _selectedCategory = _categories.contains(widget.product.category)
         ? widget.product.category
-        : 'Saree';
+        : _categories.first;
   }
 
   Future<void> _saveChanges() async {

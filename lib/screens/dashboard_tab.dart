@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
-import '../widgets/stat_card.dart'; // Verify this path matches your project structure
+import '../widgets/stat_card.dart';
+import '../models/product.dart'; // Make sure to import your Product model!
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
@@ -12,20 +13,28 @@ class DashboardTab extends StatefulWidget {
 
 class _DashboardTabState extends State<DashboardTab> {
   final ApiService _apiService = ApiService();
-  late Future<Map<String, dynamic>> _statsFuture;
+
+  // We upgraded this to hold a List of dynamic data so we can store multiple futures
+  late Future<List<dynamic>> _dashboardDataFuture;
 
   @override
   void initState() {
     super.initState();
-    // PRESERVED: Using your specific method name 'fetchhStats'
-    _statsFuture = _apiService.fetchhStats();
+    _dashboardDataFuture = _fetchEverything();
+  }
+
+  // Fetch both stats and products at the EXACT SAME TIME for speed
+  Future<List<dynamic>> _fetchEverything() async {
+    return Future.wait([
+      _apiService.fetchhStats(),     // Index 0: Returns Map<String, dynamic>
+      _apiService.fetchProducts(),   // Index 1: Returns List<Product>
+    ]);
   }
 
   // Pull-to-Refresh Logic
   Future<void> _refreshStats() async {
     setState(() {
-      // PRESERVED: Using your specific method name 'fetchhStats'
-      _statsFuture = _apiService.fetchhStats();
+      _dashboardDataFuture = _fetchEverything();
     });
   }
 
@@ -33,7 +42,7 @@ class _DashboardTabState extends State<DashboardTab> {
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
-    return Scaffold( // Added Scaffold for proper structure
+    return Scaffold(
       body: RefreshIndicator(
         onRefresh: _refreshStats,
         child: SingleChildScrollView(
@@ -62,20 +71,20 @@ class _DashboardTabState extends State<DashboardTab> {
                 const SizedBox(height: 20),
 
                 /// API BUILDER
-                FutureBuilder<Map<String, dynamic>>(
-                  future: _statsFuture,
+                FutureBuilder<List<dynamic>>(
+                  future: _dashboardDataFuture,
                   builder: (context, snapshot) {
                     // 1. LOADING
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                         child: Padding(
                           padding: EdgeInsets.all(20.0),
-                          child: CircularProgressIndicator(),
+                          child: CircularProgressIndicator(color: Colors.black),
                         ),
                       );
                     }
 
-                    // 2. ERROR HANDLER (Network failed)
+                    // 2. ERROR HANDLER
                     if (snapshot.hasError) {
                       return Center(
                         child: Text(
@@ -85,14 +94,17 @@ class _DashboardTabState extends State<DashboardTab> {
                       );
                     }
 
-                    // 3. NULL SAFETY SHIELD (The Crash Fix)
-                    // We check if data exists. If null, use empty map {}.
-                    // This prevents the "Receiver: null" crash.
-                    final rawData = snapshot.data ?? {};
+                    // 3. EXTRACT THE PARALLEL DATA
+                    // Safety check to ensure we have data, otherwise default to empty
+                    final List<dynamic> results = snapshot.data ?? [{}, []];
 
-                    // We check if the 'data' key exists inside the response.
-                    // If not, use empty map to allow the UI to render "0"s.
-                    final data = rawData['stats'] ?? {};
+                    // Index 0 is our fetchhStats() result
+                    final rawStatsData = results[0] as Map<String, dynamic>? ?? {};
+                    final data = rawStatsData['stats'] ?? {};
+
+                    // Index 1 is our fetchProducts() result
+                    final productsList = results[1] as List<Product>? ?? [];
+                    final activeProductsCount = productsList.length;
 
                     return GridView.count(
                       crossAxisCount: 2,
@@ -105,7 +117,6 @@ class _DashboardTabState extends State<DashboardTab> {
                         // 1. REVENUE CARD
                         StatCard(
                           title: "Total Revenue",
-                          // Safely defaults to 0 if key is missing or null
                           value: currencyFormat.format(data['total_revenue'] ?? 0),
                           icon: Icons.currency_rupee_rounded,
                           color: Colors.green,
@@ -127,10 +138,10 @@ class _DashboardTabState extends State<DashboardTab> {
                           color: Colors.orange,
                         ),
 
-                        // 4. Inventory (Placeholder)
+                        // 4. INVENTORY CARD (Now 100% Live!)
                         StatCard(
                           title: "Products",
-                          value: "ACTIVE",
+                          value: "$activeProductsCount", // <-- REPLACED "ACTIVE"
                           icon: Icons.inventory,
                           color: Colors.purple,
                         ),

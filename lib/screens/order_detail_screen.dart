@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/order.dart';
 import '../services/api_service.dart';
-// Add this to pubspec if missing, or use ScaffoldMessenger
 
 class OrderDetailScreen extends StatefulWidget {
   final Order order;
@@ -28,19 +27,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _markAsShipped() async {
     setState(() => _isLoading = true);
 
-    final success = await _apiService.updateORderStatus(widget.order.id, 'Shipped');
+    // Fixed typo here to match our ApiService method
+    final success = await _apiService.updateOrderStatus(widget.order.id, 'Shipped');
 
     setState(() => _isLoading = false);
 
     if (success) {
       setState(() => _currentStatus = 'Shipped');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Order marked as Shipped!"), backgroundColor: Colors.green),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Order marked as Shipped!"), backgroundColor: Colors.green),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to update status"), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to update status"), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -52,6 +56,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Order #${widget.order.id}"),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -102,10 +107,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   children: [
                     _buildDetailRow(Icons.person, widget.order.customerName),
                     const Divider(),
-                    // Ideally, pass phone/address in the Order model if available
-                    _buildDetailRow(Icons.phone, "+91 98765 43210"), // Placeholder
+                    // REPLACED PLACEHOLDER WITH DYNAMIC PHONE DATA
+                    _buildDetailRow(Icons.phone, widget.order.customerPhone),
                     const Divider(),
-                    _buildDetailRow(Icons.location_on, "Flat 402, Saoner, Maharashtra, 441107"), // Placeholder
+                    // REPLACED PLACEHOLDER WITH DYNAMIC EMAIL DATA
+                    _buildDetailRow(Icons.email, widget.order.customerEmail),
+                    const Divider(),
+                    // REPLACED PLACEHOLDER WITH DYNAMIC ADDRESS DATA
+                    _buildDetailRow(Icons.location_on, widget.order.shippingAddress),
                   ],
                 ),
               ),
@@ -128,10 +137,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       width: 50,
                       height: 50,
                       color: Colors.grey[200],
-                      child: const Icon(Icons.image, color: Colors.grey), // Placeholder for Saree Image
+                      child: const Icon(Icons.shopping_bag, color: Colors.grey),
                     ),
-                    title: Text(item.productName),
-                    subtitle: Text("Qty: ${item.quantity}"),
+                    title: Text(item.productName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    // ADDED COLOR DETAILS TO THE SUBTITLE
+                    subtitle: Text("Color: ${item.colorName}  |  Qty: ${item.quantity}"),
                     trailing: Text(
                       currencyFormat.format(item.price),
                       style: const TextStyle(fontWeight: FontWeight.bold),
@@ -150,7 +160,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 const Text("Total Amount", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text(
                   currencyFormat.format(widget.order.totalAmount),
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
               ],
             ),
@@ -165,27 +175,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         width: MediaQuery.of(context).size.width * 0.9,
         height: 55,
         child: FloatingActionButton.extended(
-          // Logic: If loading or already shipped, disable the click (null)
           onPressed: (_isLoading || isShipped) ? null : _markAsShipped,
-
-          // Style: Green if Shipped, Red/BrandColor if Pending
-          backgroundColor: isShipped ? Colors.green : Theme.of(context).primaryColor,
-          elevation: isShipped ? 0 : 6, // Flat look if completed
-
-          // Icon: Tick if Shipped, Truck if Pending
+          backgroundColor: isShipped ? Colors.green : Colors.black, // Sleek black to match app theme
+          elevation: isShipped ? 0 : 6,
           icon: Icon(
             isShipped ? Icons.check_circle : Icons.local_shipping,
             color: Colors.white,
             size: 28,
           ),
-
-          // Text: "SHIPPED" vs "MARK AS SHIPPED"
           label: _isLoading
               ? const SizedBox(
               height: 20,
               width: 20,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-          )
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : Text(
             isShipped ? "SHIPPED" : "MARK AS SHIPPED",
             style: const TextStyle(
@@ -202,11 +204,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildDetailRow(IconData icon, String text) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: Colors.grey[600], size: 20),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(text, style: const TextStyle(fontSize: 15)),
+          child: Text(text, style: const TextStyle(fontSize: 15, height: 1.3)),
         ),
       ],
     );
